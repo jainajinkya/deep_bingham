@@ -1,10 +1,17 @@
-import torch
-from modules.gram_schmidt import gram_schmidt, gram_schmidt_batched
-from modules.quaternion_matrix import quaternion_matrix
-from utils.utils import \
-    convert_euler_to_quaternion
-from modules.vm_operations import *
+# from modules.gram_schmidt import gram_schmidt, gram_schmidt_batched
+# from modules.quaternion_matrix import quaternion_matrix
+# from utils.utils import \
+#     convert_euler_to_quaternion
+# from modules.vm_operations import *
+
 import math
+import torch
+
+from third_party.deep_bingham.data_loaders import convert_euler_to_quaternion
+from third_party.deep_bingham.modules.gram_schmidt import gram_schmidt_batched, gram_schmidt
+from third_party.deep_bingham.modules.quaternion_matrix import quaternion_matrix
+from third_party.deep_bingham.modules.vm_operations import output_to_angles, output_to_angles_and_kappas
+
 
 def angular_loss_single_sample(target, predicted):
     """ Returns the angle between two quaternions.
@@ -37,6 +44,7 @@ def maad_mse(target, predicted):
 
     return angular_loss / target.shape[0]
 
+
 def maad_cosine(target, predicted):
     angular_dev = 0
     for i in range(target.shape[0]):
@@ -50,16 +58,15 @@ def maad_cosine(target, predicted):
         roll_target = target[i][2]
 
         target_quat = convert_euler_to_quaternion(pan_target, tilt_target,
-                                                      roll_target)
+                                                  roll_target)
         predicted_quat = convert_euler_to_quaternion(math.degrees(pan),
-                                                         math.degrees(tilt),
-                                                         math.degrees(roll))
+                                                     math.degrees(tilt),
+                                                     math.degrees(roll))
         angular_dev += angular_loss_single_sample(torch.from_numpy(target_quat),
                                                   torch.from_numpy(
                                                       predicted_quat))
 
     return angular_dev / target.shape[0]
-
 
 
 def maad_biternion(target, predicted):
@@ -75,10 +82,10 @@ def maad_biternion(target, predicted):
         roll_target = target[i][2]
 
         target_quat = convert_euler_to_quaternion(pan_target, tilt_target,
-                                                      roll_target)
+                                                  roll_target)
         predicted_quat = convert_euler_to_quaternion(math.degrees(pan),
-                                                         math.degrees(tilt),
-                                                         math.degrees(roll))
+                                                     math.degrees(tilt),
+                                                     math.degrees(roll))
         angular_dev += angular_loss_single_sample(torch.from_numpy(target_quat),
                                                   torch.from_numpy(
                                                       predicted_quat))
@@ -121,6 +128,3 @@ def maad_bingham(target, predicted, orthogonalization="gram_schmidt"):
             angular_dev += angular_loss_single_sample(target[i], param_m[:, 3])
 
     return angular_dev / target.shape[0]
-
-
-

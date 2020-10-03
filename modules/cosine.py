@@ -1,5 +1,5 @@
-from modules.maad import output_to_angles, maad_cosine 
-from utils import radians
+from third_party.deep_bingham.modules.maad import output_to_angles, maad_cosine
+from third_party.deep_bingham.utils import radians
 import torch
 
 class CosineLoss():

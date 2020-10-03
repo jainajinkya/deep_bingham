@@ -9,10 +9,10 @@ import torch
 import math
 import sys
 from scipy.interpolate import Rbf
-import utils
-from utils import generate_coordinates
-from modules.maad import maad_biternion
-from modules.vm_operations import *
+import third_party.deep_bingham.utils
+from third_party.deep_bingham.utils import generate_coordinates
+from third_party.deep_bingham.modules.maad import maad_biternion
+from third_party.deep_bingham.modules.vm_operations import *
 
 
 class VonMisesLoss(object):

@@ -1,6 +1,6 @@
 import torch
-from modules import maad
-from utils import AverageMeter, eaad_bingham, eaad_von_mises
+from third_party.deep_bingham.modules import maad
+from third_party.deep_bingham.utils import AverageMeter, eaad_bingham, eaad_von_mises
 import numpy as np
 
 

@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from modules.maad import maad_mse
+from third_party.deep_bingham.modules.maad import maad_mse
 
 class MSELoss(object):
     """

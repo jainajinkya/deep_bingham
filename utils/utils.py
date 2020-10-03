@@ -4,7 +4,7 @@ import copy
 import dill
 import hashlib
 import itertools
-import bingham_distribution as ms
+import third_party.deep_bingham.bingham_distribution as ms
 import math
 import numpy as np
 import os

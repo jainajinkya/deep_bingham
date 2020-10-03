@@ -10,12 +10,12 @@ import torchvision.transforms as transforms
 import yaml
 from tensorboardX import SummaryWriter
 
-import data_loaders
-import modules.network
+import third_party.deep_bingham.data_loaders as data_loaders
+from third_party.deep_bingham.modules import network
 
-from modules import BinghamLoss, BinghamMixtureLoss, \
+from third_party.deep_bingham.modules import BinghamLoss, BinghamMixtureLoss, \
     VonMisesLoss, MSELoss, CosineLoss
-from training import Trainer
+from third_party.deep_bingham.training import Trainer
 
 
 torch.manual_seed(0)
@@ -102,7 +102,7 @@ def main():
     model_name = config["train"]["model"] or 'vgg11'
     num_classes = config["train"].get("num_outputs", None)
 
-    model = modules.network.get_model(name=model_name,
+    model = network.get_model(name=model_name,
                                       pretrained=True,
                                       num_channels=num_channels,
                                       num_classes=num_classes)

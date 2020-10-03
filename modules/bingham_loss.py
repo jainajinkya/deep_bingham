@@ -4,17 +4,17 @@ from __future__ import print_function
 import dill
 import os
 
-import bingham_distribution as ms
+import third_party.deep_bingham.bingham_distribution as ms
 import numpy as np
 import torch
 from scipy.interpolate import Rbf
 
 import utils
 
-from modules.maad import maad_bingham
-from modules.gram_schmidt import gram_schmidt, gram_schmidt_batched
-from modules.quaternion_matrix import quaternion_matrix
-from utils import generate_coordinates, vec_to_bingham_z_many
+from third_party.deep_bingham.modules.maad import maad_bingham
+from third_party.deep_bingham.modules.gram_schmidt import gram_schmidt, gram_schmidt_batched
+from third_party.deep_bingham.modules.quaternion_matrix import quaternion_matrix
+from third_party.deep_bingham.utils import generate_coordinates, vec_to_bingham_z_many
 
 
 def batched_logprob(target, mu, sigma):
