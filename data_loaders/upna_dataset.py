@@ -6,7 +6,7 @@ from torch.utils.data import Dataset
 import h5py
 from .upna_preprocess import *
 from .utils import *
-from bingham_distribution import BinghamDistribution
+from third_party.deep_bingham.bingham_distribution import BinghamDistribution
 
 def make_hdf5_file(config, image_transform):
     dataset_path = config["preprocess_path"]

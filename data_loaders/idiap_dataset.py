@@ -10,7 +10,7 @@ from PIL import Image
 from skimage import io
 from torch.utils.data import Dataset
 from .utils import *
-from bingham_distribution import BinghamDistribution
+from third_party.deep_bingham.bingham_distribution import BinghamDistribution
 
 class IDIAPTrainTest(object):
     """
