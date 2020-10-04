@@ -1,20 +1,17 @@
 """Implementation of the Bingham loss function"""
 from __future__ import print_function
 
-import dill
 import os
 
-import third_party.deep_bingham.bingham_distribution as ms
+import dill
 import numpy as np
 import torch
 from scipy.interpolate import Rbf
 
-import utils
-
+from third_party.deep_bingham.modules.gram_schmidt import gram_schmidt_batched
 from third_party.deep_bingham.modules.maad import maad_bingham
-from third_party.deep_bingham.modules.gram_schmidt import gram_schmidt, gram_schmidt_batched
 from third_party.deep_bingham.modules.quaternion_matrix import quaternion_matrix
-from third_party.deep_bingham.utils import generate_coordinates, vec_to_bingham_z_many
+from third_party.deep_bingham.utils import generate_coordinates, vec_to_bingham_z_many, load_lookup_table
 
 
 def batched_logprob(target, mu, sigma):
@@ -65,42 +62,42 @@ class BinghamLoss(object):
                  orthogonalization="gram_schmidt"):
 
         self.orthogonalization = orthogonalization
-       
+
         _, _, nc_lookup_table, coords \
-            = utils.load_lookup_table(lookup_table_file)
+            = load_lookup_table(lookup_table_file)
 
         print("Bingham Interpolation Kernel: " + interpolation_kernel)
 
         self.interp_options = {
-                "interp_data": torch.from_numpy(nc_lookup_table),
-                "interp_coords": torch.from_numpy(coords)
-            }
+            "interp_data": torch.from_numpy(nc_lookup_table),
+            "interp_coords": torch.from_numpy(coords)
+        }
         rbf_file = os.path.splitext(lookup_table_file)[0] + ".rbf"
         if os.path.exists(rbf_file):
             with open(rbf_file, 'rb') as file:
                 self.rbf = dill.load(file)
         else:
             x, y, z = generate_coordinates(
-                    self.interp_options["interp_coords"])
+                self.interp_options["interp_coords"])
 
             # Limit found empirically.
             assert len(x) < 71000, "Lookup table too large."
             print("Creating the interpolator... (this usually takes a while)")
             self.rbf = Rbf(x, y, z, torch.log(
-                    self.interp_options["interp_data"]
-                ).numpy().ravel().squeeze())
+                self.interp_options["interp_data"]
+            ).numpy().ravel().squeeze())
 
             with open(rbf_file, 'wb') as file:
-               dill.dump(self.rbf, file)
+                dill.dump(self.rbf, file)
 
     def __call__(self, target, output):
         if target.is_cuda:
             device = target.get_device()
         M, Z = self._output_to_m_z(output)
         log_likelihood = torch.sum(
-                self._log_bingham_loss(
-                    target, M, Z.squeeze(0),
-                    self.rbf))
+            self._log_bingham_loss(
+                target, M, Z.squeeze(0),
+                self.rbf))
 
         loss = -log_likelihood
         return loss, log_likelihood / target.shape[0]
@@ -179,12 +176,12 @@ class BinghamLoss(object):
 
         norm_const = BinghamInterpolationRBF.apply(Z, rbf)
         likelihoods = (torch.bmm(torch.bmm(torch.bmm(torch.bmm(
-                target.unsqueeze(1),
-                M),
-                z_as_matrices),
-                M.transpose(1, 2)),
-                target.unsqueeze(2))
-                          ).squeeze() - norm_const
+            target.unsqueeze(1),
+            M),
+            z_as_matrices),
+            M.transpose(1, 2)),
+            target.unsqueeze(2))
+                      ).squeeze() - norm_const
         return likelihoods
 
     def _output_to_m_z(self, output):
@@ -197,10 +194,11 @@ class BinghamLoss(object):
                 shape (19,) for gram-schmidt orthogonalization and (7,) for
                 quaternion_matrix orthogonalization.
         """
-        bd_z = utils.vec_to_bingham_z_many(output[:, :3])
+        bd_z = vec_to_bingham_z_many(output[:, :3])
         bd_m = vec_to_bingham_m(output[:, 3:], self.orthogonalization)
 
         return bd_m, bd_z
+
 
 class BinghamInterpolationRBF(torch.autograd.Function):
     r"""Computes the Bingham interpolation constant and its derivatives.
@@ -279,6 +277,7 @@ class BinghamInterpolationRBF(torch.autograd.Function):
 
         return result, None
 
+
 def vec_to_bingham_m(output, orthogonalization):
     """ Creates orthogonal matrix from output.
 
@@ -303,13 +302,10 @@ def vec_to_bingham_m(output, orthogonalization):
         reshaped_output = output.reshape(batch_size, 4, 4)
         bd_m = gram_schmidt_batched(reshaped_output, modified=True)
     elif orthogonalization == "quaternion_matrix":
-       #TODO batched version
+        # TODO batched version
         bd_m = torch.zeros(output.shape[0], 4, 4).to(device=output.device, dtype=output.dtype)
         for i in range(output.shape[0]):
             bd_m[i] = quaternion_matrix(output)
     else:
         raise ValueError("Invalid orthogonalization type.")
     return bd_m
-
-
-
