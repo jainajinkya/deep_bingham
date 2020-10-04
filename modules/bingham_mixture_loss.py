@@ -5,7 +5,7 @@ from .maad import angular_loss_single_sample
 from .bingham_fixed_dispersion import BinghamFixedDispersionLoss
 from .bingham_loss import BinghamLoss
 from .gram_schmidt import gram_schmidt_batched
-from utils import vec_to_bingham_z_many
+from third_party.deep_bingham.utils import vec_to_bingham_z_many
 
 
 class BinghamMixtureLoss(object):

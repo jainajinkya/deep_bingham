@@ -4,3 +4,4 @@ from .bingham_mixture_loss import BinghamMixtureLoss
 from .mse import MSELoss
 from .von_mises import VonMisesLoss
 from .cosine import CosineLoss
+from .bingham_fixed_dispersion import BinghamFixedDispersionLoss
