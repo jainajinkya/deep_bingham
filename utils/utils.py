@@ -15,6 +15,7 @@ import sys
 import torch
 
 from pathos.multiprocessing import ProcessingPool as Pool
+from pathos.multiprocessing import cpu_count
 
 def convert_euler_to_quaternion(roll, yaw, pitch):
     """Converts roll, yaw, pitch to a quaternion.
@@ -222,7 +223,7 @@ def build_bd_lookup_table(table_type, options, path=None):
             a file name and placing the file in the precomputed folder.
     """
     hash_obj = hashlib.sha256()
-    hash_obj.update(table_type)
+    hash_obj.update(table_type.encode('utf-8'))
     hash_obj.update(dill.dumps(options))
     config_hash = hash_obj.hexdigest()
 
@@ -320,8 +321,8 @@ def build_vm_lookup_table(options, path=None):
 
 def _compute_bd_lookup_table(coords, nc_options):
     num_points = len(coords)
-
-    pool = Pool()
+    
+    pool = Pool(max(cpu_count()//2, 1))
 
     def nc_wrapper(idx):
         pt_idx = point_indices[idx]
