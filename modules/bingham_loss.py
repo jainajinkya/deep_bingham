@@ -13,7 +13,6 @@ from third_party.deep_bingham.modules.maad import maad_bingham
 from third_party.deep_bingham.modules.quaternion_matrix import quaternion_matrix
 from third_party.deep_bingham.utils import generate_coordinates, vec_to_bingham_z_many, load_lookup_table
 
-
 def batched_logprob(target, mu, sigma):
     """ Mean of log probability of targets given mu and sigmas of a Gaussian
     distribution """
@@ -245,12 +244,13 @@ class BinghamInterpolationRBF(torch.autograd.Function):
         """
         delta = 0.0001
         x = rbfi(Z[0], Z[1], Z[2])
+
         finite_diff_x = (rbfi(Z[0] + delta, Z[1], Z[2]) - x) / delta
 
         finite_diff_y = (rbfi(Z[0], Z[1] + delta, Z[2]) - x) / delta
 
         finite_diff_z = (rbfi(Z[0], Z[1], Z[2] + delta) - x) / delta
-
+        
         return torch.tensor([finite_diff_x, finite_diff_y, finite_diff_z])
 
     @staticmethod
@@ -263,12 +263,18 @@ class BinghamInterpolationRBF(torch.autograd.Function):
         grad_Z = torch.zeros(Z.shape[0], 3)
 
         v = Z.detach().cpu().numpy()
+        
+        grad_output = grad_output.to(grad_Z.device)  # Making sure they are on the same device
+        
         for idx in range(grad_output.shape[0]):
             grad_Z[idx] = \
                 grad_output[idx] \
                 * BinghamInterpolationRBF._compute_derivatives(rbfi, v[idx])
+        
+        grad_output = grad_output.to(Z.device) # Reverting to original device
 
         tensor_type = grad_output.type()
+
         if grad_output.is_cuda:
             device = grad_output.get_device()
             result = torch.tensor(grad_Z, device=device).type(tensor_type)

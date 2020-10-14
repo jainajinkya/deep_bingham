@@ -5,3 +5,4 @@ models/
 # Ignore IDE project configuration files.
 .idea/
 .vscode/
+*__pycache__*
